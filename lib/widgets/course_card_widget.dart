@@ -31,19 +31,19 @@ class CourseCard extends StatelessWidget {
     int maxLines;
     switch (currentBreakpoint) {
       case MOBILE:
-        maxLines = 2;
+        maxLines = 1;
         break;
       case TABLET:
-        maxLines = 3;
+        maxLines = 2;
         break;
       case "BIG-TABLET":
-        maxLines = 4;
+        maxLines = 2;
         break;
       case DESKTOP:
-        maxLines = 5;
+        maxLines = 2;
         break;
       default: // '4K'
-        maxLines = 6;
+        maxLines = 2;
     }
 
     // Responsive layout based on screen size

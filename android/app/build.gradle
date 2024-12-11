@@ -45,11 +45,13 @@ android {
         debug {
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
+//            storeFile file(keystoreProperties['storeFile'])
+            storeFile file("easy-player-release-key.jks")
             storePassword keystoreProperties['storePassword']
         }
         release {
-            storeFile = keystoreProperties['storeFile']
+//            storeFile = keystoreProperties['storeFile']
+            storeFile file("easy-player-release-key.jks")
             storePassword = keystoreProperties['storePassword']
             keyAlias = keystoreProperties['keyAlias']
             keyPassword = keystoreProperties['keyPassword']
