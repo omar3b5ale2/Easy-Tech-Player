@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -68,7 +69,9 @@ class AppConstants {
   static Future<void> initializeBaseUrl() async {
     final prefs = await SharedPreferences.getInstance();
     baseUrl = prefs.getString('base_url') ?? baseUrl;
-    print('cached base url: $baseUrl');
+    if (kDebugMode) {
+      print('cached base url: $baseUrl');
+    }
   }
 
   // Set Base URL
@@ -88,7 +91,9 @@ class AppConstants {
   static Future<void> initializeAppName() async {
     final prefs = await SharedPreferences.getInstance();
     appName = prefs.getString('app_name') ?? appName;
-    print('cached app name: $appName');
+    if (kDebugMode) {
+      print('cached app name: $appName');
+    }
   }
 
   // Set the appName and store it in SharedPreferences

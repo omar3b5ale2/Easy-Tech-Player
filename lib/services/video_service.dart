@@ -1,9 +1,9 @@
 // video_service.dart
-import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'database_helper.dart';
 import '../models/video_data.dart';
+import 'package:flutter/foundation.dart';
 
 class VideoService {
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -17,7 +17,9 @@ class VideoService {
   }) async {
     final db = await _dbHelper.database;
     final totalTimeInMinutes = totalTimeInSeconds / 60;
-    debugPrint("saving: 'video_id'$videoId, 'total_time': $totalTimeInMinutes");
+    if (kDebugMode) {
+      print("saving: 'video_id'$videoId, 'total_time': $totalTimeInMinutes");
+    }
     await db.insert(
       'videos',
       {

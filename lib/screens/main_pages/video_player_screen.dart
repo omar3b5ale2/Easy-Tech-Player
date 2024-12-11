@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/utils/constants/app_constants.dart';
 import '../../core/utils/shared/second_appbar.dart';
 import '../../services/video_service.dart';
@@ -76,10 +77,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         Timer.periodic(const Duration(seconds: 1), _backgroundTimerTick);
 
     // Set up the timer to send data to API every minute
-    _apiTimer =
-        Timer.periodic(Duration(minutes: Random().nextInt(6)), (_) {
-          _sendVideoDataToApi();
-        });
+    _apiTimer = Timer.periodic(Duration(minutes: Random().nextInt(6)), (_) {
+      _sendVideoDataToApi();
+    });
     _authorizeUser();
     _trackPosition();
   }
@@ -139,10 +139,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           qualityOptions = fetchedQualityOptions;
         });
       } else {
-        debugPrint('Failed to fetch playlist: HTTP ${response.statusCode}');
+        if (kDebugMode) {
+          print('Failed to fetch playlist: HTTP ${response.statusCode}');
+        }
       }
     } catch (e) {
-      debugPrint('Error: $e');
+      if (kDebugMode) {
+        debugPrint('Error: $e');
+      }
     }
   }
 

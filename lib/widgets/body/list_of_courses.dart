@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/utils/constants/app_colors.dart';
@@ -26,7 +27,9 @@ class _ListOfCoursesState extends State<ListOfCourses> {
       final data = await apiService.fetchCourses();
       return data.map((courseData) => Course.fromJson(courseData)).toList();
     } catch (error) {
-      debugPrint('Error fetching courses: $error');
+      if (kDebugMode) {
+        debugPrint('Error fetching courses: $error');
+      }
       return [];
     }
   }
@@ -93,8 +96,12 @@ class _ListOfCoursesState extends State<ListOfCourses> {
   @override
   Widget build(BuildContext context) {
     final currentBreakpoint = ResponsiveBreakpoints.of(context).breakpoint.name;
-    print(currentBreakpoint);
-    print(MediaQuery.of(context).size.width);
+    if (kDebugMode) {
+      print(currentBreakpoint);
+    }
+    if (kDebugMode) {
+      print(MediaQuery.of(context).size.width);
+    }
 
     return FutureBuilder<List<Course>>(
       future: _coursesFuture,
@@ -148,10 +155,10 @@ class _ListOfCoursesState extends State<ListOfCourses> {
                   final course = courses[index];
                   return GestureDetector(
                     onTap: () async {
-                      if (course.link.isNotEmpty ) {
+                      if (course.link.isNotEmpty) {
                         try {
-
-                          final Uri url = Uri.parse('${course.link}?token=${AppConstants.token}');
+                          final Uri url = Uri.parse(
+                              '${course.link}?token=${AppConstants.token}');
                           if (await canLaunchUrl(url)) {
                             await launchUrl(url,
                                 mode: LaunchMode.externalApplication);
@@ -159,7 +166,9 @@ class _ListOfCoursesState extends State<ListOfCourses> {
                             throw 'لا يمكن فتح الرابط: ${course.link}';
                           }
                         } catch (e) {
-                          debugPrint('Error launching URL: $e');
+                          if (kDebugMode) {
+                            debugPrint('Error launching URL: $e');
+                          }
                           _showDialog(context);
                         }
                       } else {
