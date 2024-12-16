@@ -1,7 +1,7 @@
 
 # Preserve Flutter's main entry point
--keep class io.flutter.** { *; }
--keep class io.flutter.app.** { *; }
+#-keep class io.flutter.** { *; }
+#-keep class io.flutter.app.** { *; }
 -keep class io.flutter.embedding.** { *; }
 -keep class io.flutter.plugin.** { *; }
 -dontwarn io.flutter.embedding.**
@@ -32,3 +32,4 @@
 -dontwarn androidx.lifecycle.**
 -dontwarn kotlinx.**
 -dontwarn javax.annotation.**
+#-dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
