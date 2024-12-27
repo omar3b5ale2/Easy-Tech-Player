@@ -52,7 +52,7 @@ class AppConstants {
   // API
   static const String apiKey =
       'Api-Key 0FWs33Nw.eCWDhANZ2Wet5bfmCpEK3nvES7cTTxTt';
-  static String baseUrl = ' '; // Default value
+  static String baseUrl = 'https://manasa.easytech-sotfware.com'; // Default value
   static String token = ' '; // Default value
 
   static const String endPoint = 'course/course-list';
@@ -64,23 +64,22 @@ class AppConstants {
   // Text Directions
   static const TextDirection textDirection = TextDirection.rtl;
   static const TextAlign textAlign = TextAlign.center;
-
   // Initialize Base URL
-  static Future<void> initializeBaseUrl() async {
-    final prefs = await SharedPreferences.getInstance();
-    baseUrl = prefs.getString('base_url') ?? baseUrl;
-    if (kDebugMode) {
-      print('cached base url: $baseUrl');
-    }
-  }
-
-  // Set Base URL
-  static Future<void> setBaseUrl(String url) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('base_url', url);
-
-    baseUrl = url;
-  }
+  // static Future<void> initializeBaseUrl() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   baseUrl = prefs.getString('base_url') ?? baseUrl;
+  //   if (kDebugMode) {
+  //     print('cached base url: $baseUrl');
+  //   }
+  // }
+  //
+  // // Set Base URL
+  // static Future<void> setBaseUrl(String url) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.setString('base_url', url);
+  //
+  //   baseUrl = url;
+  // }
   static Future<void> setToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);

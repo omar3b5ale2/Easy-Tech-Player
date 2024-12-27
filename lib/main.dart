@@ -24,7 +24,7 @@ void main() async {
   }
 
   await _debugPrintDatabaseRecords();
-  await AppConstants.initializeBaseUrl();
+  // await AppConstants.initializeBaseUrl();
 
   runApp(const MyApp());
 }

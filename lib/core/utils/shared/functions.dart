@@ -57,14 +57,13 @@ Widget handleDeepLink(
         encryptionService.decryptAndExtractData(deepLinkData);
 
     if (decryptedPayload != null) {
-      final baseUrl = decryptedPayload['base_url'];
+      // final baseUrl = decryptedPayload[AppConstants.baseUrl];
       final token = decryptedPayload['token'];
-
-      if (baseUrl != null && baseUrl.isNotEmpty) {
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setString('base_url', baseUrl); // Cache the base_url
-        });
-        AppConstants.setBaseUrl(baseUrl);
+      // if (baseUrl != null && baseUrl.isNotEmpty) {
+      //   SharedPreferences.getInstance().then((prefs) {
+      //     prefs.setString('base_url', baseUrl); // Cache the base_url
+      //   });
+      //   AppConstants.setBaseUrl(baseUrl);
 
         SharedPreferences.getInstance().then((prefs) {
           prefs.setString('token', token); // Cache the base_url
@@ -76,7 +75,7 @@ Widget handleDeepLink(
       tabsList = [
         const CoursesScreen(),
         VideoPlayerScreen(
-          key: ValueKey(decryptedPayload['video_id']),
+          key: ValueKey(decryptedPayload!['video_id']),
           studentId: decryptedPayload['student_id'].toString(),
           courseId: decryptedPayload['course_id'].toString(),
           lessonId: decryptedPayload['lesson_id'].toString(),
@@ -90,11 +89,12 @@ Widget handleDeepLink(
         const VideoListScreen(),
       ];
     }
-  }
-
   return BlocProvider(
     create: (_) => NavigationCubit()..changeTab(isDeepLink ? 1 : 0),
     // Focus on Video Player if deep linked
     child: HomeScreen(tabs: tabsList),
   );
+
 }
+
+
