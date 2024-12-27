@@ -1,14 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../../core/utils/constants/app_constants.dart';
 import '../../core/utils/shared/second_appbar.dart';
 import '../../services/video_service.dart';
 import '../../services/api_service.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:http/http.dart' as http;
 import '../../widgets/placeholder_content.dart';
 import '../material_vide_controls_theme_data.dart';
 import 'dart:math';
@@ -48,10 +45,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final controller = VideoController(player);
 
   double currentSpeed = 1.0; // Current playback speed
-  Duration currentPosition = Duration.zero; // Tracks current playback position
+  // Duration currentPosition = Duration.zero; // Tracks current playback position
   List<Map<String, String>> qualityOptions =
       []; // Holds available quality options
   String currentQuality = ''; // Current quality URL
+  List<VideoTrack> videoTracks = [];
+  VideoTrack? selectedVideoTrack;
   //---------------------------------------------------------------------------
   double _effectivePlayedTime = 0.0;
 
@@ -81,24 +80,23 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       _sendVideoDataToApi();
     });
     _authorizeUser();
-    _trackPosition();
+    // _trackPosition();
   }
 
-  void _trackPosition() {
-    positionSubscription = player.stream.position.listen((position) {
-      currentPosition = position;
-    });
-  }
-
-  void _initializeVideoPlayer() async {
-    await _fetchQualityLinks(widget.videoLink);
-    if (qualityOptions.isNotEmpty) {
-      setState(() {
-        currentQuality = qualityOptions[0]['url']!;
-      });
-      _playVideo(currentQuality);
-    }
-  }
+  // void _trackPosition() {
+  //   positionSubscription = player.stream.position.listen((position) {
+  //     currentPosition = position;
+  //   });
+  // }
+  //
+  // void _initializeVideoPlayer() async {
+  //   // await _fetchQualityLinks(widget.videoLink);
+  //   // if (qualityOptions.isNotEmpty) {
+  //   //   setState(() {
+  //   //     currentQuality = qualityOptions[0]['url']!;
+  //   //   });
+  //     _playVideo(widget.videoLink);
+  // }
 
   void _backgroundTimerTick(Timer timer) {
     if (player.state.playing) {
@@ -115,62 +113,74 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
   }
 
-  Future<void> _fetchQualityLinks(String hlsUrl) async {
-    try {
-      final response = await http.get(Uri.parse(hlsUrl));
-      if (response.statusCode == 200) {
-        final lines = const LineSplitter().convert(response.body);
-        final fetchedQualityOptions = <Map<String, String>>[];
-
-        for (int i = 0; i < lines.length; i++) {
-          if (lines[i].startsWith('#EXT-X-STREAM-INF')) {
-            final qualityInfo = lines[i];
-            if (i + 1 < lines.length && !lines[i + 1].startsWith('#')) {
-              final qualityUrl = lines[i + 1];
-              fetchedQualityOptions.add({
-                'info': qualityInfo.substring(qualityInfo.length - 3),
-                'url': Uri.parse(hlsUrl).resolve(qualityUrl).toString(),
-              });
-            }
-          }
-        }
-
-        setState(() {
-          qualityOptions = fetchedQualityOptions;
-        });
-      } else {
-        if (kDebugMode) {
-          print('Failed to fetch playlist: HTTP ${response.statusCode}');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Error: $e');
-      }
-    }
-  }
+  // Future<void> _fetchQualityLinks(String hlsUrl) async {
+  //   try {
+  //     final response = await http.get(Uri.parse(hlsUrl));
+  //     if (response.statusCode == 200) {
+  //       final lines = const LineSplitter().convert(response.body);
+  //       final fetchedQualityOptions = <Map<String, String>>[];
+  //
+  //       for (int i = 0; i < lines.length; i++) {
+  //         if (lines[i].startsWith('#EXT-X-STREAM-INF')) {
+  //           final qualityInfo = lines[i];
+  //           if (i + 1 < lines.length && !lines[i + 1].startsWith('#')) {
+  //             final qualityUrl = lines[i + 1];
+  //             fetchedQualityOptions.add({
+  //               'info': qualityInfo.substring(qualityInfo.length - 3),
+  //               'url': Uri.parse(hlsUrl).resolve(qualityUrl).toString(),
+  //             });
+  //           }
+  //         }
+  //       }
+  //
+  //       setState(() {
+  //         qualityOptions = fetchedQualityOptions;
+  //       });
+  //     } else {
+  //       if (kDebugMode) {
+  //         print('Failed to fetch playlist: HTTP ${response.statusCode}');
+  //       }
+  //     }
+  //   } catch (e) {
+  //     if (kDebugMode) {
+  //       debugPrint('Error: $e');
+  //     }
+  //   }
+  // }
 
   void _playVideo(String url) async {
-    debugPrint('Playing video at currentPosition: $currentPosition');
-    Duration startPosition = currentPosition; // Save the current position
+    // debugPrint('Playing video at currentPosition: $currentPosition');
+    // Duration startPosition = currentPosition; // Save the current position
 
     // Open the new video URL but do not play it immediately
-    await player.open(Media(url), play: false);
+    await player.open(Media(url), play: false).then((_) {
+      // Fetch available tracks after media is loaded.
+      videoTracks = player.state.tracks.video;
+      // audioTracks = player.state.tracks.audio;
+      // subtitleTracks = player.state.tracks.subtitle;
+
+      // Automatically set the first available track or a default track.
+      selectedVideoTrack = videoTracks.isNotEmpty ? videoTracks[0] : null;
+      // selectedAudioTrack = audioTracks.isNotEmpty ? audioTracks[0] : null;
+      // selectedSubtitleTrack = subtitleTracks.isNotEmpty ? subtitleTracks[0] : null;
+
+      setState(() {});
+    });
     _isLoading = false;
     // Wait for the player to indicate readiness (loaded media)
-    StreamSubscription? readySubscription;
-    readySubscription = player.stream.duration.listen((duration) async {
-      if (duration != Duration.zero) {
-        // Once the media is ready, seek to the desired position
-        await player.seek(startPosition);
-
-        // Start playback only after seeking
-        await player.play();
-
-        // Cancel the subscription to avoid redundant calls
-        readySubscription?.cancel();
-      }
-    });
+    // StreamSubscription? readySubscription;
+    // readySubscription = player.stream.duration.listen((duration) async {
+    //   if (duration != Duration.zero) {
+    //     // Once the media is ready, seek to the desired position
+    //     await player.seek(startPosition);
+    //
+    //     // Start playback only after seeking
+    //     await player.play();
+    //
+    //     // Cancel the subscription to avoid redundant calls
+    //     readySubscription?.cancel();
+    //   }
+    // });
 
     // Track the video duration for other logic
     player.stream.duration.listen((duration) {
@@ -236,7 +246,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (response != null && response.statusCode == 200) {
       setState(() {
         _isAuthorized = true;
-        _initializeVideoPlayer();
+        _playVideo(widget.videoLink);
       });
     } else {
       setState(() {
@@ -258,6 +268,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     super.dispose();
   }
 
+  void _setVideoTrack(VideoTrack track) {
+    player.setVideoTrack(track);
+    setState(() {
+      selectedVideoTrack = track;
+    });
+  }
+
   Future<void> _debugPrintDatabaseRecordsOnClose() async {
     final allVideos = await _videoService.getAllVideos();
     for (var video in allVideos) {
@@ -276,13 +293,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       barrierDismissible: true,
       builder: (BuildContext context) {
         return QualitySpeedSelector(
-          qualityOptions: qualityOptions,
-          currentQuality: currentQuality,
-          onQualityChanged: (String newQuality) {
-            setState(() {
-              currentQuality = newQuality;
-            });
-            _playVideo(newQuality);
+          videoTracks: videoTracks, // video tracks
+          selectedVideoTrack: selectedVideoTrack, //current vid track
+          onQualityChanged: (VideoTrack newQuality) {
+            // setState(() {
+            //   currentQuality = newQuality;
+            // });
+            // _playVideo(newQuality);
+            _setVideoTrack(newQuality);
           },
           currentSpeed: currentSpeed,
           onSpeedChanged: (double newSpeed) {
