@@ -1,3 +1,4 @@
+import 'package:easy_player_app/widgets/body/list_of_courses.dart';
 import 'package:flutter/material.dart';
 import '../../core/utils/constants/app_constants.dart';
 import '../../core/utils/shared/second_appbar.dart';
@@ -48,13 +49,27 @@ class _CoursesScreenState extends State<CoursesScreen> {
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const PlaceholderContent(
                 message:
-                    'افتح الدرس من منصة المدرس و هتشوف كل الكورسات هنا ^_^ ...',
+                'افتح الدرس من منصة المدرس و هتشوف كل الكورسات هنا ^_^ ...',
                 imagePath: 'assets/icon/home_placeholder.png',
               );
             }
 
             final platforms = snapshot.data!;
-            return ListView.builder(
+
+            // // If there's only one platform, navigate directly to its details page
+            // if (platforms.length == 1) {
+            //   WidgetsBinding.instance.addPostFrameCallback((_) {
+            //     _navigateToPlatformCourses(context, platforms.first);
+            //   });
+            //
+            //   // Show a loading indicator while navigating
+            //   return const Center(child: CircularProgressIndicator());
+            // }
+
+            // If there are multiple platforms, show the list
+            return
+              platforms.length>1?
+              ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 2),
               itemCount: platforms.length,
               itemBuilder: (context, index) {
@@ -65,7 +80,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       _navigateToPlatformCourses(context, platform),
                 );
               },
-            );
+            ):
+                  ListOfCourses(platformBaseUrl: platforms[0].platformBaseUrl, platformToken: platforms[0].token,)
+            ;
           },
         ),
       ),

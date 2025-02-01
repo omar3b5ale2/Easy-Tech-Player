@@ -74,7 +74,7 @@ class _ListOfCoursesState extends State<ListOfCourses> {
                     color: Colors.white, // Background color
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.4), // Shadow color
+                        color: Colors.grey.withOpacity(0.4), // Shadow color
                         spreadRadius: 2,
                         blurRadius: 5,
                         offset: Offset(0, 3), // Shadow position

@@ -38,7 +38,7 @@ class CourseCardHorizontal extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 side: BorderSide(
                   // Add border
-                  color: Colors.grey.withValues(alpha: 0.2),
+                  color: Colors.grey.withOpacity(0.2),
                   width: 1,
                 ),
               ),

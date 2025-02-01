@@ -957,7 +957,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           Dialog(
             backgroundColor: Colors.transparent,
             child: Material(
-              color: Colors.black.withValues(alpha: 0.9),
+              color: Colors.black.withOpacity( 0.9),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.all(16),
