@@ -725,6 +725,7 @@ import '../../services/api_service.dart';
 import '../../services/video_service.dart';
 import '../../widgets/placeholder_content.dart';
 import '../material_vide_controls_theme_data.dart';
+import '../../core/utils/shared/base_url_singlton.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoLink;
@@ -736,6 +737,7 @@ class VideoPlayerScreen extends StatefulWidget {
   final String courseId;
   final String encryptededData;
   final String studentId;
+  final String platformName;
 
   const VideoPlayerScreen({
     super.key,
@@ -748,6 +750,7 @@ class VideoPlayerScreen extends StatefulWidget {
     required this.lessonId,
     required this.courseId,
     required this.studentId,
+    required this.platformName,
   });
 
   @override
@@ -790,7 +793,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     player = Player();
     controller = VideoController(player);
     _videoService = VideoService();
-    _apiService = ApiService(baseUrl: AppConstants.baseUrl);
+    final sharedState = getIt<SharedState>();
+    _apiService = ApiService(baseUrl: sharedState.baseUrl);
     _authorizeAndInitialize();
   }
 
@@ -839,11 +843,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         _videoTotalDuration = duration.inSeconds.toDouble();
         if (_videoTotalDuration > 0) {
           _videoService.addOrUpdateVideo(
-            videoId: widget.videoId,
-            totalTimeInSeconds: _videoTotalDuration,
-            encryptedData: widget.encryptededData,
-            lessonName: widget.lessonName,
-            unitName: widget.unitName,
+              videoId: widget.videoId,
+              totalTimeInSeconds: _videoTotalDuration,
+              encryptedData: widget.encryptededData,
+              lessonName: widget.lessonName,
+              unitName: widget.unitName,
+              platformName: widget.platformName
           );
         }
       });
@@ -948,107 +953,111 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Material(
-          color: Colors.black.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Video Quality',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (validVideoTracks.isEmpty)
-                  const Text(
-                    'No quality options available',
-                    style: TextStyle(color: Colors.white),
-                  )
-                else
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: validVideoTracks.map((track) {
-                      final isSelected = track == selectedVideoTrack;
-                      return GestureDetector(
-                        onTap: () {
-                          _setVideoTrack(track);
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.turquoise : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.white),
-                          ),
-                          child: Text(
-                            _getQualityLabel(track),
-                            style: TextStyle(
-                              color: isSelected ? Colors.black : Colors.white,
+      builder: (context) =>
+          Dialog(
+            backgroundColor: Colors.transparent,
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Video Quality',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (validVideoTracks.isEmpty)
+                      const Text(
+                        'No quality options available',
+                        style: TextStyle(color: Colors.white),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: validVideoTracks.map((track) {
+                          final isSelected = track == selectedVideoTrack;
+                          return GestureDetector(
+                            onTap: () {
+                              _setVideoTrack(track);
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.turquoise : Colors
+                                    .transparent,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.white),
+                              ),
+                              child: Text(
+                                _getQualityLabel(track),
+                                style: TextStyle(
+                                  color: isSelected ? Colors.black : Colors
+                                      .white,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Playback Speed',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [0.5, 1.0, 1.5, 2.0].map((speed) {
+                        final isSelected = speed == currentSpeed;
+                        return GestureDetector(
+                          onTap: () {
+                            _changePlaybackSpeed(speed);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.turquoise : Colors
+                                  .transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.white),
+                            ),
+                            child: Text(
+                              '${speed}x',
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white,
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-
-                const SizedBox(height: 24),
-                const Text(
-                  'Playback Speed',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [0.5, 1.0, 1.5, 2.0].map((speed) {
-                    final isSelected = speed == currentSpeed;
-                    return GestureDetector(
-                      onTap: () {
-                        _changePlaybackSpeed(speed);
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.turquoise : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white),
-                        ),
-                        child: Text(
-                          '${speed}x',
-                          style: TextStyle(
-                            color: isSelected ? Colors.black : Colors.white,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -1064,52 +1073,57 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.videoLink.isEmpty) {
-      return const PlaceholderContent(
+      return Scaffold(
+        appBar: SecondAppBar(text: 'Player'),
+        body: const PlaceholderContent(
+
         message: 'افتح الفيديو من منصة المستر وهيشتغل هنا ^_^ ...',
         imagePath: 'assets/icon/video_placeholder.png',
-      );
+      ),
+    );
     }
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+    return const Center(child: CircularProgressIndicator());
     }
 
     if (!_isAuthorized) {
-      return const PlaceholderContent(
-        message: 'برجاء التأكد ان الاشتراك مظبوط هنا ^_* ...',
-        imagePath: 'assets/icon/unauthorized.png',
-      );
+    return const PlaceholderContent(
+    message: 'برجاء التأكد ان الاشتراك مظبوط هنا ^_* ...',
+    imagePath: 'assets/icon/unauthorized.png',
+    );
     }
 
     return Directionality(
-      textDirection: AppConstants.textDirection,
-      child: Scaffold(
-        appBar: SecondAppBar(text: widget.lessonName),
-        body: Stack(
-          children: [
-            Center(
-              child: MaterialVideoControlsTheme(
-                normal: buildVideoControlsTheme(
-                  onSettingsPressed: _showQualitySpeedSelector,
-                ),
-                fullscreen: buildVideoControlsTheme(
-                  onSettingsPressed: _showQualitySpeedSelector,
-                ),
-                child: Video(
-                  controller: controller,
-                  wakelock: true,
-                ),
-              ),
-            ),
-            if (_isChangingTrack)
-              const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.turquoise,
-                ),
-              ),
-          ],
-        ),
-      ),
+    textDirection: AppConstants.textDirection,
+    child: Scaffold(
+    appBar: SecondAppBar(text: widget.lessonName),
+    body: Stack(
+    children: [
+    Center(
+    child: MaterialVideoControlsTheme(
+    normal: buildVideoControlsTheme(
+    onSettingsPressed: _showQualitySpeedSelector,
+    ),
+    fullscreen: buildVideoControlsTheme(
+    onSettingsPressed: _showQualitySpeedSelector,
+    ),
+    child: Video(
+    controller: controller,
+    wakelock: true,
+    ),
+    ),
+    ),
+    if (_isChangingTrack)
+    const Center(
+    child: CircularProgressIndicator(
+    color: AppColors.turquoise,
+    ),
+    ),
+    ],
+    ),
+    )
+    ,
     );
   }
 }

@@ -26,6 +26,7 @@ class DatabaseHelper {
       return await dbFactory.openDatabase(dbPath, options: OpenDatabaseOptions(
         version: 1,
         onCreate: (db, version) async {
+          // Create videos table
           await db.execute('''
             CREATE TABLE videos(
               video_id TEXT PRIMARY KEY,
@@ -33,7 +34,17 @@ class DatabaseHelper {
               watch_time REAL,
               unit_name TEXT,
               lesson_name TEXT,
+              platform_name TEXT,
               encrypted_data TEXT
+            )
+          ''');
+
+          // Create platforms table
+          await db.execute('''
+            CREATE TABLE platforms(
+              platform_name TEXT PRIMARY KEY,
+              platform_base_url TEXT,
+              token TEXT
             )
           ''');
         },
@@ -45,6 +56,7 @@ class DatabaseHelper {
         join(dbPath, 'video_app.db'),
         version: 1,
         onCreate: (db, version) async {
+          // Create videos table
           await db.execute('''
             CREATE TABLE videos(
               video_id TEXT PRIMARY KEY,
@@ -52,7 +64,17 @@ class DatabaseHelper {
               watch_time REAL,
               unit_name TEXT,
               lesson_name TEXT,
+              platform_name TEXT,
               encrypted_data TEXT
+            )
+          ''');
+
+          // Create platforms table
+          await db.execute('''
+            CREATE TABLE platforms(
+              platform_name TEXT PRIMARY KEY,
+              platform_base_url TEXT,
+              token TEXT
             )
           ''');
         },

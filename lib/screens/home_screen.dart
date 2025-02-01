@@ -28,6 +28,7 @@ class HomeScreen extends StatelessWidget {
         lessonId: '',
         courseId: '',
         studentId: '',
+        platformName: '',
       ),
       VideoListScreen(),
     ];

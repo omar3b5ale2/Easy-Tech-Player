@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../managers/cubit/navigation_cubit.dart';
 import '../../../screens/home_screen.dart';
 import '../../../screens/main_pages/courses_screen.dart';
 import '../../../screens/main_pages/video_list_screen.dart';
 import '../../../screens/main_pages/video_player_screen.dart';
 import '../../../services/encryption_service.dart';
-import '../constants/app_constants.dart';
+import '../../../services/video_service.dart'; // Import the VideoService
+import 'base_url_singlton.dart';
 
 // Initialize the list of tabs (lazy-loaded when required).
 List<Widget> tabsList = const [
@@ -25,6 +25,7 @@ List<Widget> tabsList = const [
     unitName: '',
     token: '',
     encryptededData: '',
+    platformName: '',
   ),
   VideoListScreen(),
 ];
@@ -35,7 +36,6 @@ Widget handleDeepLink(
   String? invocationRoute,
 }) {
   String deepLinkData = '';
-  // AppConstants.setAppName('7amada');
 
   if (Platform.isWindows) {
     deepLinkData = state.pathParameters['data'] ?? '';
@@ -57,25 +57,32 @@ Widget handleDeepLink(
         encryptionService.decryptAndExtractData(deepLinkData);
 
     if (decryptedPayload != null) {
-      // final baseUrl = decryptedPayload[AppConstants.baseUrl];
+      // Extract base URL and token from the decrypted payload
+      final baseUrl = 'https://${decryptedPayload['base_url']}';
       final token = decryptedPayload['token'];
-      // if (baseUrl != null && baseUrl.isNotEmpty) {
-      //   SharedPreferences.getInstance().then((prefs) {
-      //     prefs.setString('base_url', baseUrl); // Cache the base_url
-      //   });
-      //   AppConstants.setBaseUrl(baseUrl);
+      final platformName = decryptedPayload['platform_name']; // Use the host as the platform name
+      // final platformName = 'الاسطوره'; // Use the host as the platform name
 
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setString('token', token); // Cache the base_url
-        });
-        AppConstants.setToken(token);
-      }
+      // Update the singleton and AppConstants
+      final sharedState = getIt<SharedState>();
+      sharedState.baseUrl = baseUrl;
+      print(
+          '[DATA] |handleDeepLink| sharedState.baseUrl = ${sharedState.baseUrl}');
 
+
+      // Insert or update the platform in the database
+      final videoService = VideoService();
+      videoService.addOrUpdatePlatform(
+        platformName: platformName,
+        platformBaseUrl: baseUrl,
+        token: token,
+      );
+      print(decryptedPayload['platform_name']);
       // Update tabs list dynamically with decrypted payload
       tabsList = [
         const CoursesScreen(),
         VideoPlayerScreen(
-          key: ValueKey(decryptedPayload!['video_id']),
+          key: ValueKey(decryptedPayload['video_id']),
           studentId: decryptedPayload['student_id'].toString(),
           courseId: decryptedPayload['course_id'].toString(),
           lessonId: decryptedPayload['lesson_id'].toString(),
@@ -84,17 +91,17 @@ Widget handleDeepLink(
           videoId: decryptedPayload['video_id'].toString(),
           unitName: decryptedPayload['unit_name'],
           token: decryptedPayload['token'],
+          platformName: decryptedPayload['platform_name'],
           encryptededData: deepLinkData,
         ),
         const VideoListScreen(),
       ];
     }
+  }
+
   return BlocProvider(
     create: (_) => NavigationCubit()..changeTab(isDeepLink ? 1 : 0),
     // Focus on Video Player if deep linked
     child: HomeScreen(tabs: tabsList),
   );
-
 }
-
-

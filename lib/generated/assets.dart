@@ -4,6 +4,7 @@ class Assets {
 
   static const String bodyBottomNavigationBarWidget = 'lib/widgets/body/bottom_navigation_bar_widget.dart';
   static const String bodyListOfCourses = 'lib/widgets/body/list_of_courses.dart';
+  static const String bodyPlatformCoursesScreen = 'lib/widgets/body/platform_courses_screen.dart';
   static const String bodySplashBody = 'lib/widgets/body/splash_body.dart';
   static const String constantsAppColors = 'lib/core/utils/constants/app_colors.dart';
   static const String constantsAppConstants = 'lib/core/utils/constants/app_constants.dart';
@@ -24,6 +25,7 @@ class Assets {
   static const String mainPagesVideoListScreen = 'lib/screens/main_pages/video_list_screen.dart';
   static const String mainPagesVideoPlayerScreen = 'lib/screens/main_pages/video_player_screen.dart';
   static const String modelsCourseModel = 'lib/models/course_model.dart';
+  static const String modelsPlatformDataModel = 'lib/models/platform_data_model.dart';
   static const String modelsVideoData = 'lib/models/video_data.dart';
   static const String routerAppRouting = 'lib/core/config/router/app_routing.dart';
   static const String screensHomeScreen = 'lib/screens/home_screen.dart';
@@ -34,12 +36,16 @@ class Assets {
   static const String servicesDatabaseHelper = 'lib/services/database_helper.dart';
   static const String servicesEncryptionService = 'lib/services/encryption_service.dart';
   static const String servicesVideoService = 'lib/services/video_service.dart';
+  static const String sharedBaseUrlSinglton = 'lib/core/utils/shared/base_url_singlton.dart';
   static const String sharedFunctions = 'lib/core/utils/shared/functions.dart';
   static const String sharedSecondAppbar = 'lib/core/utils/shared/second_appbar.dart';
+  static const String widgetsCourseCardHorizontal = 'lib/widgets/course_card_horizontal.dart';
   static const String widgetsCourseCardWidget = 'lib/widgets/course_card_widget.dart';
   static const String widgetsHistoryCard = 'lib/widgets/history_card.dart';
   static const String widgetsMarqueeWidget = 'lib/widgets/marquee_widget.dart';
   static const String widgetsMaterialVideControlsThemeData = 'lib/widgets/material_vide_controls_theme_data.dart';
   static const String widgetsPlaceholderContent = 'lib/widgets/placeholder_content.dart';
+  static const String widgetsPlatformCard = 'lib/widgets/platform_card.dart';
+  static const String widgetsPlatformCourseSection = 'lib/widgets/platform_course_section.dart';
 
 }

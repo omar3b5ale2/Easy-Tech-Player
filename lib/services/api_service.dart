@@ -90,7 +90,11 @@ class ApiService {
   }
 
   // Method to fetch courses
-  Future<List<Map<String, dynamic>>> fetchCourses() async {
+  Future<List<Map<String, dynamic>>> fetchCourses(
+      {
+        required String baseUrl,
+      }
+      ) async {
     const endpoint = AppConstants.endPoint;
     final url = Uri.parse('$baseUrl/$endpoint');
     if (kDebugMode) {

@@ -10,6 +10,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'core/config/router/app_routing.dart';
 import 'core/utils/constants/app_constants.dart';
+import 'core/utils/shared/base_url_singlton.dart';
 import 'managers/cubit/appbar_cubit.dart';
 import 'managers/cubit/navigation_cubit.dart';
 import 'services/video_service.dart';
@@ -17,7 +18,7 @@ import 'services/video_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-
+  setupSingleton();
   // Initialize sqflite_ffi for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
@@ -32,6 +33,7 @@ void main() async {
 Future<void> _debugPrintDatabaseRecords() async {
   final videoService = VideoService();
   final allVideos = await videoService.getAllVideos();
+
   for (var video in allVideos) {
     debugPrint(
       "[DATABASE] Video ID: ${video.videoId}, Total Time: ${video.totalTime}, Watched: ${video.watchTime}, Lesson: ${video.lessonName}",

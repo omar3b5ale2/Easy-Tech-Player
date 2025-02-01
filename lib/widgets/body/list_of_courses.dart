@@ -1,3 +1,4 @@
+// list_of_courses.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -11,7 +12,11 @@ import '../marquee_widget.dart';
 import '../placeholder_content.dart';
 
 class ListOfCourses extends StatefulWidget {
-  const ListOfCourses({super.key});
+  final String platformBaseUrl;
+
+  final String platformToken;
+
+  const ListOfCourses({super.key, required this.platformBaseUrl,required this.platformToken});
 
   @override
   State<ListOfCourses> createState() => _ListOfCoursesState();
@@ -19,12 +24,13 @@ class ListOfCourses extends StatefulWidget {
 
 class _ListOfCoursesState extends State<ListOfCourses> {
   late Future<List<Course>> _coursesFuture;
-  final ApiService apiService =
-      ApiService(baseUrl: AppConstants.baseUrl); // Replace with your base URL
 
   Future<List<Course>> _fetchCourses() async {
+    final ApiService apiService = ApiService(baseUrl: widget.platformBaseUrl);
+
     try {
-      final data = await apiService.fetchCourses();
+      final data =
+          await apiService.fetchCourses(baseUrl: widget.platformBaseUrl);
       return data.map((courseData) => Course.fromJson(courseData)).toList();
     } catch (error) {
       if (kDebugMode) {
@@ -51,7 +57,7 @@ class _ListOfCoursesState extends State<ListOfCourses> {
             child: const Text(
               'مش هنقدر نفتح لك الدرس من هنا دلوقتي ممكن تفتحه من المنصة',
               style: AppConstants.dialogTextStyle,
-              textDirection: TextDirection.rtl,
+              textDirection: AppConstants.textDirection,
             ),
           ),
           actions: [
@@ -68,7 +74,7 @@ class _ListOfCoursesState extends State<ListOfCourses> {
                     color: Colors.white, // Background color
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.4), // Shadow color
+                        color: Colors.grey.withValues(alpha: 0.4), // Shadow color
                         spreadRadius: 2,
                         blurRadius: 5,
                         offset: Offset(0, 3), // Shadow position
@@ -158,7 +164,7 @@ class _ListOfCoursesState extends State<ListOfCourses> {
                       if (course.link.isNotEmpty) {
                         try {
                           final Uri url = Uri.parse(
-                              '${course.link}?token=${AppConstants.token}');
+                              '${course.link}?token=${widget.platformToken}');
                           if (await canLaunchUrl(url)) {
                             await launchUrl(url,
                                 mode: LaunchMode.externalApplication);

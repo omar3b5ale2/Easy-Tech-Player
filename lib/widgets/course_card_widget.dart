@@ -82,6 +82,7 @@ class CourseCard extends StatelessWidget {
               child: Image.network(
                 cover,
                 height: imageHeight, // Dynamic height based on grid or list
+
                 fit: BoxFit.cover,
               ),
             ),
