@@ -131,7 +131,7 @@ class PlatformVideosScreen extends StatelessWidget {
       child: Scaffold(
         appBar:
         SecondAppBar(
-          text: 'فيديوهات المنصة: $platformName',
+          text: 'Video History Of: $platformName',
           showReturnButton: true,
         ),
         body: FutureBuilder<List<VideoData>>(
