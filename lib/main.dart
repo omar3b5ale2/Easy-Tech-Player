@@ -19,26 +19,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   setupSingleton();
+
   // Initialize sqflite_ffi for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
   }
 
-  await _debugPrintDatabaseRecords();
-  // await AppConstants.initializeBaseUrl();
-
   runApp(const MyApp());
-}
-
-Future<void> _debugPrintDatabaseRecords() async {
-  final videoService = VideoService();
-  final allVideos = await videoService.getAllVideos();
-
-  for (var video in allVideos) {
-    debugPrint(
-      "[DATABASE] Video ID: ${video.videoId}, Total Time: ${video.totalTime}, Watched: ${video.watchTime}, Lesson: ${video.lessonName}",
-    );
-  }
 }
 
 class MyApp extends StatefulWidget {
@@ -55,35 +42,68 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize platform-specific features
     if (Platform.isAndroid || Platform.isIOS) {
       _enableScreenProtections();
-    }
-    if (Platform.isWindows) {
-      initDeepLinks();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        initDeepLinks(context);
+      });
+    } else if (Platform.isWindows) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        initDeepLinks(context);
+      });
     }
   }
 
-  Future<void> initDeepLinks() async {
+  Future<void> initDeepLinks(BuildContext context) async {
     _appLinks = AppLinks();
 
-    // Handle links
+    // Handle initial deep link on cold start
+    final initialUri = await _appLinks.getInitialLink();
+    if (initialUri != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        openAppLink(initialUri, context);
+      });
+    }
+
+    // Handle foreground deep links (app already open)
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('onAppLink: $uri');
-      openAppLink(uri);
+      debugPrint('Foreground Deep Link Received: $uri');
+      openAppLink(uri, context);
     });
   }
 
-  void openAppLink(Uri uri) {
-    final path = uri.fragment.isNotEmpty ? uri.fragment : '/';
-    router.go(path);
+  void openAppLink(Uri uri, BuildContext context) {
+    // Extract path from URI's path component
+    final rawPath = uri.path;
+    final path = rawPath.isNotEmpty ? rawPath : '/';
+    // Normalize path to ensure it starts with '/'
+    final normalizedPath = path.startsWith('/') ? path : '/$path';
+
+    debugPrint('Navigating to: $normalizedPath');
+
+    // Force navigation to the deep link path
+    if (router.state!.uri.path != normalizedPath) {
+      router.go(normalizedPath);
+    }
+
+    // Update the NavigationCubit to reflect the correct tab
+    final navigationCubit = context.read<NavigationCubit>();
+    if (normalizedPath == '/video') {
+      navigationCubit.changeTab(1); // Navigate to Page 1 for deep links
+    } else {
+      navigationCubit.changeTab(0); // Navigate to Tab 0 for normal launches
+    }
   }
 
   @override
   void dispose() {
+    // Cleanup platform-specific features
     if (Platform.isAndroid || Platform.isIOS) {
       _disableScreenProtections();
-      _linkSubscription?.cancel();
     }
+    _linkSubscription?.cancel();
     super.dispose();
   }
 
@@ -102,9 +122,12 @@ class _MyAppState extends State<MyApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-            create: (_) =>
-            AppBarCubit()..initAnimation(this as TickerProvider)),
-        BlocProvider(create: (_) => NavigationCubit()),
+          create: (_) => AppBarCubit()..initAnimation(this as TickerProvider),
+        ),
+        BlocProvider(
+          create: (_) => NavigationCubit(),
+          lazy: false, // Ensure immediate availability
+        ),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

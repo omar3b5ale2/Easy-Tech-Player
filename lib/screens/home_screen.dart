@@ -9,10 +9,27 @@ import '../core/utils/constants/app_constants.dart';
 import '../managers/cubit/navigation_cubit.dart';
 import '../widgets/body/bottom_navigation_bar_widget.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final List<Widget>? tabs;
+  final int initialTab; // Add this parameter
 
-  const HomeScreen({super.key, this.tabs});
+  const HomeScreen({
+    super.key,
+    this.tabs,
+    required this.initialTab, // Mark as required
+  });
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Set the initial tab when the HomeScreen is first created
+    context.read<NavigationCubit>().changeTab(widget.initialTab);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,16 +50,16 @@ class HomeScreen extends StatelessWidget {
       VideoListScreen(),
     ];
 
-    final List<Widget> activeTabs = tabs ?? defaultTabs;
+    final List<Widget> activeTabs = widget.tabs ?? defaultTabs;
 
     return ResponsiveBreakpoints.builder(
       child: Scaffold(
         body: BlocBuilder<NavigationCubit, int>(
-          builder: (BuildContext context, int state) {
+          builder: (BuildContext context, int currentTab) {
             return IndexedStack(
-              index: state,
+              index: currentTab,
               children: activeTabs,
-            ); // Lazy load tabs for performance
+            );
           },
         ),
         bottomNavigationBar: const BottomNavigationBarWidget(),

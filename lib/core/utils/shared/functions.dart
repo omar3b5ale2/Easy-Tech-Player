@@ -1,9 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../managers/cubit/navigation_cubit.dart';
 import '../../../screens/home_screen.dart';
 import '../../../screens/main_pages/courses_screen.dart';
 import '../../../screens/main_pages/video_list_screen.dart';
@@ -99,9 +97,8 @@ Widget handleDeepLink(
     }
   }
 
-  return BlocProvider(
-    create: (_) => NavigationCubit()..changeTab(isDeepLink ? 1 : 0),
-    // Focus on Video Player if deep linked
-    child: HomeScreen(tabs: tabsList),
+  return HomeScreen(
+    tabs: tabsList,
+    initialTab: isDeepLink ? 1 : 0, // Directly pass the initial tab
   );
 }
