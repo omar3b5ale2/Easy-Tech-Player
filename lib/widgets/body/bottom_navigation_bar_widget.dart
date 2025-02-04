@@ -41,7 +41,7 @@ class BottomNavigationBarWidget extends StatelessWidget {
           selectedFontSize: fontSize, // Responsive font size
           unselectedFontSize: fontSize - 1,
           selectedItemColor: AppColors.teal, // Customize selected label color
-          unselectedItemColor: AppColors.darkBlue, // Customize unselected label color
+          unselectedItemColor: Colors.grey, // Customize unselected label color
           // Slightly smaller for unselected
           items: [
             _buildBottomNavigationBarItem(
