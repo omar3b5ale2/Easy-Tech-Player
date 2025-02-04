@@ -1,137 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
-//
-// import '../managers/cubit/navigation_cubit.dart';
-//
-// class BottomNavigationBarWidget extends StatelessWidget {
-//   const BottomNavigationBarWidget({super.key});
-//   @override
-//   Widget build(BuildContext context) {
-//     return BlocBuilder<NavigationCubit, int>(
-//       builder: (context, state) {
-//         return BottomNavigationBar(
-//           backgroundColor: Colors.white,
-//           currentIndex: state,
-//           onTap: (index) {
-//             context.read<NavigationCubit>().changeTab(index);
-//           },
-//           items:  [
-//             _buildBottomNavigationBarItem(Icons.home_filled, "Home", 0, state),
-//             _buildBottomNavigationBarItem(Icons.ondemand_video_sharp, "Player", 1, state),
-//             _buildBottomNavigationBarItem(Icons.history_edu, "History", 2, state),
-//           ],
-//         );
-//       },
-//     );
-//   }
-//   BottomNavigationBarItem _buildBottomNavigationBarItem(IconData icon,
-//       String label, int index,int currentState) {
-//     return BottomNavigationBarItem(
-//       icon: currentState == index
-//           ? Container(
-//         width: 40,
-//         height: 40,
-//         decoration: const BoxDecoration(
-//           color: Colors.deepPurple,
-//           shape: BoxShape.circle,
-//         ),
-//         child: Icon(
-//           icon,
-//           color: Colors.white,
-//         ),
-//       )
-//           : Icon(icon, color: Colors.grey),
-//       label: label,
-//
-//     );
-//   }
-// }
-//
-// import 'package:flutter/material.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
-//
-// import '../../managers/cubit/navigation_cubit.dart';
-//
-// class BottomNavigationBarWidget extends StatelessWidget {
-//   const BottomNavigationBarWidget({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return BlocBuilder<NavigationCubit, int>(
-//       builder: (context, state) {
-//         return BottomNavigationBar(
-//           backgroundColor: Colors.white,
-//           currentIndex: state,
-//           onTap: (index) {
-//             context.read<NavigationCubit>().changeTab(index);
-//           },
-//           type: BottomNavigationBarType.fixed, // Ensures fixed tabs
-//           elevation: 10, // Adds slight shadow for better visibility
-//           selectedFontSize: 12, // Font size for selected items
-//           unselectedFontSize: 11, // Font size for unselected items
-//           items: [
-//             _buildBottomNavigationBarItem(
-//               icon: Icons.home_filled,
-//               label: "Home",
-//               index: 0,
-//               currentState: state,
-//             ),
-//             _buildBottomNavigationBarItem(
-//               icon: Icons.ondemand_video_sharp,
-//               label: "Player",
-//               index: 1,
-//               currentState: state,
-//             ),
-//             _buildBottomNavigationBarItem(
-//               icon: Icons.history_edu,
-//               label: "History",
-//               index: 2,
-//               currentState: state,
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-//
-//   BottomNavigationBarItem _buildBottomNavigationBarItem({
-//     required IconData icon,
-//     required String label,
-//     required int index,
-//     required int currentState,
-//   }) {
-//     final bool isSelected = currentState == index;
-//     return BottomNavigationBarItem(
-//       icon: isSelected
-//           ? Container(
-//         width: 50,
-//         height: 50,
-//         decoration: BoxDecoration(
-//           color: Colors.deepPurple,
-//           shape: BoxShape.circle,
-//           boxShadow: [
-//             BoxShadow(
-//               color: Colors.deepPurple.withOpacity(0.4),
-//               spreadRadius: 1,
-//               blurRadius: 6,
-//             ),
-//           ],
-//         ),
-//         child: Icon(
-//           icon,
-//           color: Colors.white,
-//           size: 24,
-//         ),
-//       )
-//           : Icon(
-//         icon,
-//         color: Colors.grey,
-//         size: 24,
-//       ),
-//       label: label,
-//     );
-//   }
-// }
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -179,25 +45,28 @@ class BottomNavigationBarWidget extends StatelessWidget {
           // Slightly smaller for unselected
           items: [
             _buildBottomNavigationBarItem(
-              icon: Icons.home,
-              label: "Home",
-              index: 0,
-              currentState: state,
-              iconSize: iconSize,
+                icon: Icons.home,
+                label: "Home",
+                index: 0,
+                currentState: state,
+                iconSize: iconSize,
+                color: Colors.grey
             ),
             _buildBottomNavigationBarItem(
-              icon: Icons.ondemand_video_sharp,
-              label: "Player",
-              index: 1,
-              currentState: state,
-              iconSize: iconSize,
+                icon: Icons.ondemand_video_sharp,
+                label: "Player",
+                index: 1,
+                currentState: state,
+                iconSize: iconSize+15,
+                color: Colors.red
             ),
             _buildBottomNavigationBarItem(
-              icon: Icons.history_rounded,
-              label: "History",
-              index: 2,
-              currentState: state,
-              iconSize: iconSize,
+                icon: Icons.history_rounded,
+                label: "History",
+                index: 2,
+                currentState: state,
+                iconSize: iconSize,
+                color: Colors.grey
             ),
           ],
         );
@@ -211,6 +80,7 @@ class BottomNavigationBarWidget extends StatelessWidget {
     required int index,
     required int currentState,
     required double iconSize,
+    required Color color
   }) {
     final bool isSelected = currentState == index;
     return BottomNavigationBarItem(
@@ -237,10 +107,11 @@ class BottomNavigationBarWidget extends StatelessWidget {
       )
           : Icon(
         icon,
-        color: Colors.grey,
+        color: color,
         size: iconSize, // Adjusted size for responsiveness
       ),
       label: label,
+
     );
   }
 }
