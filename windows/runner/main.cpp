@@ -3,9 +3,14 @@
 #include <windows.h>
 #include <iostream>
 #include <string>
+#include <dwmapi.h>
 
 #include "flutter_window.h"
 #include "utils.h"
+
+#ifndef DWMWA_EXCLUDED_FROM_CAPTURE
+#define DWMWA_EXCLUDED_FROM_CAPTURE 25
+#endif
 
 // Function to check if another instance of the app is running
 bool IsAppAlreadyRunning() {
@@ -43,6 +48,11 @@ void BringExistingWindowToForeground(const std::wstring& url) {
     }
 }
 
+// Function to disable screenshots for the app
+void DisableScreenshots(HWND hwnd) {
+    SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
         _In_ wchar_t *command_line, _In_ int show_command) {
 // Attach to console when present (e.g., 'flutter run') or create a
@@ -64,9 +74,7 @@ return EXIT_SUCCESS; // Exit the new instance
 
 flutter::DartProject project(L"data");
 
-std::vector<std::string> command_line_arguments =
-        GetCommandLineArguments();
-
+std::vector<std::string> command_line_arguments = GetCommandLineArguments();
 project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
 FlutterWindow window(project);
@@ -75,6 +83,10 @@ Win32Window::Size size(1280, 720);
 if (!window.Create(L"easy_player_app", origin, size)) {
 return EXIT_FAILURE;
 }
+
+// Disable screenshots
+DisableScreenshots(window.GetHandle());
+
 window.SetQuitOnClose(true);
 
 ::MSG msg;
