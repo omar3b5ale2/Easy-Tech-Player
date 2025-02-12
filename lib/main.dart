@@ -10,10 +10,9 @@ import 'package:media_kit/media_kit.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'core/config/router/app_routing.dart';
 import 'core/utils/constants/app_constants.dart';
-import 'core/utils/shared/base_url_singlton.dart';
 import 'managers/cubit/appbar_cubit.dart';
 import 'managers/cubit/navigation_cubit.dart';
-import 'services/video_service.dart';
+import 'core/utils/shared/base_url_singlton.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,54 +46,28 @@ class _MyAppState extends State<MyApp> {
     if (Platform.isAndroid || Platform.isIOS) {
       _enableScreenProtections();
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        initDeepLinks(context);
+        initDeepLinks();
       });
     } else if (Platform.isWindows) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        initDeepLinks(context);
+        initDeepLinks();
       });
     }
   }
 
-  Future<void> initDeepLinks(BuildContext context) async {
+  Future<void> initDeepLinks() async {
     _appLinks = AppLinks();
 
-    // Handle initial deep link on cold start
-    final initialUri = await _appLinks.getInitialLink();
-    if (initialUri != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        openAppLink(initialUri, context);
-      });
-    }
-
-    // Handle foreground deep links (app already open)
+    // Handle links
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('Foreground Deep Link Received: $uri');
-      openAppLink(uri, context);
+      debugPrint('onAppLink: $uri');
+      openAppLink(uri);
     });
   }
 
-  void openAppLink(Uri uri, BuildContext context) {
-    // Extract path from URI's path component
-    final rawPath = uri.path;
-    final path = rawPath.isNotEmpty ? rawPath : '/';
-    // Normalize path to ensure it starts with '/'
-    final normalizedPath = path.startsWith('/') ? path : '/$path';
-
-    debugPrint('Navigating to: $normalizedPath');
-
-    // Force navigation to the deep link path
-    if (router.state!.uri.path != normalizedPath) {
-      router.go(normalizedPath);
-    }
-
-    // Update the NavigationCubit to reflect the correct tab
-    final navigationCubit = context.read<NavigationCubit>();
-    if (normalizedPath == '/video') {
-      navigationCubit.changeTab(1); // Navigate to Page 1 for deep links
-    } else {
-      navigationCubit.changeTab(0); // Navigate to Tab 0 for normal launches
-    }
+  void openAppLink(Uri uri) {
+    final path = uri.fragment.isNotEmpty ? uri.fragment : '/';
+    router.go(path);
   }
 
   @override
