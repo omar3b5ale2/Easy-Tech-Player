@@ -8,13 +8,12 @@ class AppConstants {
 
   static List<Breakpoint> breakpoints = [
     const Breakpoint(start: 0, end: 590, name: MOBILE),
-    const Breakpoint(start: 591, end: 930, name: TABLET),
-    const Breakpoint(start: 931, end: 1200, name: "BIG-TABLET"),
-    const Breakpoint(start: 1201, end: 1920, name: DESKTOP),
-    const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+    const Breakpoint(start: 591, end: 985, name: TABLET),
+    const Breakpoint(start: 986, end: 1301, name: "BIG-TABLET"),
+    const Breakpoint(start: 1302, end: 1938, name: DESKTOP),
+    const Breakpoint(start: 1939, end: double.infinity, name: '4K'),
   ];
 
-  // Styles
   static const titleTextStyle = TextStyle(
     fontSize: 22,
     fontWeight: FontWeight.w600,
