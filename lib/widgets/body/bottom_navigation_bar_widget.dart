@@ -60,14 +60,14 @@ class BottomNavigationBarWidget extends StatelessWidget {
                 iconSize: iconSize+15,
                 color: Colors.red
             ),
-            _buildBottomNavigationBarItem(
-                icon: Icons.history_rounded,
-                label: "History",
-                index: 2,
-                currentState: state,
-                iconSize: iconSize,
-                color: Colors.grey
-            ),
+            // _buildBottomNavigationBarItem(
+            //     icon: Icons.history_rounded,
+            //     label: "History",
+            //     index: 2,
+            //     currentState: state,
+            //     iconSize: iconSize,
+            //     color: Colors.grey
+            // ),
           ],
         );
       },
