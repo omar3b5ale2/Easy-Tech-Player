@@ -866,7 +866,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void _setupTracking() {
     _progressTimer = Timer.periodic(
       const Duration(seconds: 1),
-          (timer) {
+      (timer) {
         if (player.state.playing) {
           _effectivePlayedTime += currentSpeed;
           if (_effectivePlayedTime ~/ 60 > _lastMinuteLogged) {
@@ -879,7 +879,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     _apiUpdateTimer = Timer.periodic(
       const Duration(minutes: 1),
-          (_) => _sendProgressToApi(),
+      (_) => _sendProgressToApi(),
     );
   }
 
@@ -1081,7 +1081,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Scaffold(
+        appBar: SecondAppBar(text: 'Player'),
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (!_isAuthorized) {
@@ -1092,7 +1095,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           imagePath: 'assets/icon/unauthorized.png',
         ),
       );
-
     }
 
     return Directionality(
