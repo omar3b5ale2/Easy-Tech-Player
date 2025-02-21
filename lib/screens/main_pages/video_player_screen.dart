@@ -48,7 +48,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final VideoController controller;
   late final VideoService _videoService;
   late final ApiService _apiService;
-
+  double _progress = 0.0;
+  late Timer _timer;
   List<VideoTrack> videoTracks = [];
   VideoTrack? selectedVideoTrack;
   double currentSpeed = 1.0;
@@ -96,6 +97,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       if (response != null && response.statusCode == 200) {
         setState(() => _isAuthorized = true);
         await _initializePlayer();
+        _startProgressBar();
         _setupTracking();
       } else {
         setState(() {
@@ -111,6 +113,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       });
     }
   }
+
+  void _startProgressBar() {
+    // Start a timer that updates the progress bar every second
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_progress < 1.0) {
+          _progress += 1 / 29; // Increment progress to reach 100% in 29 seconds
+        } else {
+          _timer.cancel(); // Stop the timer once progress reaches 100%
+        }
+      });
+    });
+  }
+
 
   Future<void> _initializePlayer() async {
     try {
@@ -155,17 +171,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           // Now start checking the position
           player.stream.position.listen((position) {
             if (position.inSeconds >= 1) {
-              setState(() => _isLoading = false); // Stop loading after 1 second of playback
+              setState(() => _isLoading =
+                  false); // Stop loading after 1 second of playback
             }
           });
         }
       });
-
     } catch (e) {
       debugPrint('Player initialization error: $e');
       setState(() => _isLoading = false); // Stop loading on error
     }
   }
+
   void _setupTracking() {
     _progressTimer = Timer.periodic(
       const Duration(seconds: 1),
@@ -366,6 +383,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void dispose() {
     _progressTimer?.cancel();
     _apiUpdateTimer?.cancel();
+    _timer.cancel();
     _sendProgressToApi();
     player.dispose();
     super.dispose();
@@ -396,17 +414,39 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 height: 200,
                 fit: BoxFit.contain,
                 repeat: true, // Loop the animation
-
               ),
               const SizedBox(height: 16), // Space between animation and text
               const Padding(
                 padding: EdgeInsets.all(AppConstants.appPadding),
                 child: SizedBox(
                   height: 50,
-                  width: 300,// Height for the marquee banner
-                  child: MarqueeWidget(text: 'استنا شوية الدرس بيحمل',textColor:  AppColors.darkBlue,),
+                  width: 250, // Height for the marquee banner
+                  child: MarqueeWidget(
+                      text: 'استنا الدرس هيبدأ دلوقتي',
+                      textColor: AppColors.darkBlue),
                 ),
               ),
+              const SizedBox(
+                  height: 16), // Space between animation and progress bar
+          SizedBox(
+            width: 250, // Adjust the width of the progress bar
+            child: Container(
+              height: 12, // Adjust the height to make it taller
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8), // Adjust the radius for rounded corners
+                color: Colors.grey[300], // Background color of the progress bar
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8), // Ensure the progress bar has rounded corners too
+                child: LinearProgressIndicator(
+                  value: _progress,
+                  backgroundColor: Colors.transparent, // Set to transparent so the container color shows
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkBlue), // Color of the progress bar
+                ),
+              ),
+            ),
+          ),
+
             ],
           ),
         ),
@@ -446,7 +486,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             if (_isChangingTrack)
               Center(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Center the content vertically
+                  mainAxisSize:
+                      MainAxisSize.min, // Center the content vertically
                   children: [
                     Lottie.asset(
                       'assets/animation/dino.json', // Replace with your Lottie file path
@@ -455,16 +496,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       fit: BoxFit.contain,
                       repeat: true, // Loop the animation
                     ),
-                    const SizedBox(height: 16), // Space between animation and text
-                    const Text(
-                      "استنا شوية"
-                          "الدرس بيحمل",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white, // Adjust color as needed
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(
+                        height: 16), // Space between animation and text
+                    const Padding(
+                      padding: EdgeInsets.all(AppConstants.appPadding),
+                      child: SizedBox(
+                        height: 50,
+                        width: 300, // Height for the marquee banner
+                        child: MarqueeWidget(
+                            text: 'استنا الدرس هيبدأ دلوقتي',
+                            textColor: AppColors.darkBlue),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
