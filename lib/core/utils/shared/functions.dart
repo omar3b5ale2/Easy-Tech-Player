@@ -25,6 +25,7 @@ List<Widget> tabsList = const [
     encryptededData: '',
     platformName: '',
     uniqueId: '',
+      requestDelay: 1
   ),
   VideoListScreen(),
 ];
@@ -79,7 +80,11 @@ Widget handleDeepLink(
         platformBaseUrl: baseUrl,
         token: token,
       );
-      print(decryptedPayload['platform_name']);
+      print('decryptedPayload[request_delay]: ${decryptedPayload['request_delay']}');
+
+      print('decryptedPayload[request_delay]: ${decryptedPayload['request_delay']}');
+      print('decryptedPayload: ${decryptedPayload}');
+
       // Update tabs list dynamically with decrypted payload
       String uniqueId = generateUniqueId();
       print('uniqueId: $uniqueId');
@@ -96,6 +101,7 @@ Widget handleDeepLink(
           unitName: decryptedPayload['unit_name'],
           token: decryptedPayload['token'],
           platformName: decryptedPayload['platform_name'],
+          requestDelay: decryptedPayload['request_delay'],
           encryptededData: deepLinkData,
           uniqueId: uniqueId,
         ),

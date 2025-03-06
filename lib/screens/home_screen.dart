@@ -47,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
         studentId: '',
         platformName: '',
         uniqueId: '',
+        requestDelay: 1,
       ),
       VideoListScreen(),
     ];

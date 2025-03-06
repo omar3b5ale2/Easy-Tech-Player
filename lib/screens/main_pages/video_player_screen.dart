@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ffi';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:media_kit/media_kit.dart';
@@ -25,6 +27,7 @@ class VideoPlayerScreen extends StatefulWidget {
   final String studentId;
   final String platformName;
   final String uniqueId;
+  final int requestDelay;
   const VideoPlayerScreen({
     super.key,
     required this.videoLink,
@@ -38,6 +41,8 @@ class VideoPlayerScreen extends StatefulWidget {
     required this.studentId,
     required this.platformName,
     required this.uniqueId,
+    required this.requestDelay,
+
   });
 
   @override
@@ -57,6 +62,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   bool isFullScreen = false;
   bool _isLoading = true;
   bool _isAuthorized = false;
+  bool _isUpdate = false;
   bool _isChangingTrack = false;
   double _effectivePlayedTime = 0.0;
   double _videoTotalDuration = 0.0;
@@ -88,11 +94,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Future<void> _authorizeAndInitialize() async {
     try {
+
+      final sharedState = getIt<SharedState>();
+      print('packageInfo version: ${sharedState.appVersion}');
+      print('packageInfo build: ${sharedState.buildNumber}');
+      print('courseId : ${widget.courseId}');
+      print('lessonId : ${widget.lessonId}');
+
       final response = await _apiService.auth(
         endpoint: 'dashboard/app/app-validation-data',
         authToken: widget.token,
         courseId: widget.courseId,
         lessonId: widget.lessonId,
+        app_version: sharedState.appVersion,
+        build_number: sharedState.buildNumber,
       );
 
       if (response != null && response.statusCode == 200) {
@@ -101,8 +116,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         _startProgressBar();
 
       } else {
+        print('Status Code Not 200: ${response?.body}');
         setState(() {
           _isAuthorized = false;
+          _isUpdate = true;
           _isLoading = false;
         });
       }
@@ -204,11 +221,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   void _scheduleRandomApiUpdate() {
-    // List of possible minute intervals: 1, 2, 3, 4, 5, 6
-    final minuteOptions = [1, 2, 3, 4, 5, 6];
-    final random = Random();
-    final randomMinutes = minuteOptions[random.nextInt(minuteOptions.length)];
-    final duration = Duration(minutes: randomMinutes);
+    // int requestDelay = int.parse(widget.requestDelay);
+    // // List of possible minute intervals: 1, 2, 3, 4, 5, 6
+    // final minuteOptions = [requestDelay];
+    // final random = Random();
+    // final randomMinutes = minuteOptions[random.nextInt(minuteOptions.length)];
+    final duration = Duration(minutes: widget.requestDelay);
 
     _apiUpdateTimer?.cancel();
 
@@ -219,7 +237,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       }
     });
 
-    debugPrint('Next API update scheduled in $randomMinutes minutes');
+    debugPrint('Next API update scheduled in ${widget.requestDelay} minutes');
   }
 
   Future<void> _sendProgressToApi() async {
@@ -475,13 +493,37 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
     if (!_isAuthorized) {
-      return Scaffold(
-        appBar: SecondAppBar(text: 'Player'),
-        body: const PlaceholderContent(
-          message: 'انتهت مشاهدات الكورس الرجاء اعادة الإشتراك ^_* ...',
-          imagePath: 'assets/icon/unauthorized.png',
-        ),
-      );
+      if(_isUpdate){
+        String message = '';
+        // Initialize sqflite_ffi for desktop platforms
+        if (Platform.isIOS) {
+          message = 'اعمل Update للبرنامج من App Store';
+        }
+        else if(Platform.isAndroid){
+          message = 'اعمل Update للبرنامج من Google Play';
+        }
+        else if(Platform.isWindows){
+          message = 'اعمل Update للبرنامج من المنصة';
+        }
+        return Scaffold(
+          appBar: SecondAppBar(text: 'Player'),
+          body: PlaceholderContent(
+            message: message,
+            imagePath: 'assets/icon/update.png',
+          ),
+        );
+      }
+      else{
+        return Scaffold(
+          appBar: SecondAppBar(text: 'Player'),
+          body: const PlaceholderContent(
+            message: 'انتهت مشاهدات الكورس الرجاء اعادة الإشتراك ^_* ...',
+            imagePath: 'assets/icon/unauthorized.png',
+          ),
+        );
+
+      }
+
     }
 
     return Directionality(

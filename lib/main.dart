@@ -18,7 +18,9 @@ import 'services/video_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  setupSingleton();
+  await setupSingleton();
+
+
 
   // Initialize sqflite_ffi for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
