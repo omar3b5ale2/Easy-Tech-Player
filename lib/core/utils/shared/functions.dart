@@ -9,7 +9,7 @@ import '../../../screens/main_pages/video_player_screen.dart';
 import '../../../services/encryption_service.dart';
 import '../../../services/video_service.dart'; // Import the VideoService
 import 'base_url_singlton.dart';
-
+import 'package:uuid/uuid.dart';
 // Initialize the list of tabs (lazy-loaded when required).
 List<Widget> tabsList = const [
   CoursesScreen(),
@@ -24,6 +24,7 @@ List<Widget> tabsList = const [
     token: '',
     encryptededData: '',
     platformName: '',
+    uniqueId: '',
   ),
   VideoListScreen(),
 ];
@@ -53,7 +54,7 @@ Widget handleDeepLink(
     final encryptionService = EncryptionService();
     final decryptedPayload =
         encryptionService.decryptAndExtractData(deepLinkData);
-
+    print(decryptedPayload);
     if (decryptedPayload != null) {
       // Extract base URL and token from the decrypted payload
       final baseUrl = 'https://${decryptedPayload['base_url']}';
@@ -67,7 +68,10 @@ Widget handleDeepLink(
       print(
           '[DATA] |handleDeepLink| sharedState.baseUrl = ${sharedState.baseUrl}');
 
-
+      String generateUniqueId() {
+        const uuid = Uuid();
+        return uuid.v4(); // Generates a random UUID (version 4)
+      }
       // Insert or update the platform in the database
       final videoService = VideoService();
       videoService.addOrUpdatePlatform(
@@ -77,6 +81,8 @@ Widget handleDeepLink(
       );
       print(decryptedPayload['platform_name']);
       // Update tabs list dynamically with decrypted payload
+      String uniqueId = generateUniqueId();
+      print('uniqueId: $uniqueId');
       tabsList = [
         const CoursesScreen(),
         VideoPlayerScreen(
@@ -91,6 +97,7 @@ Widget handleDeepLink(
           token: decryptedPayload['token'],
           platformName: decryptedPayload['platform_name'],
           encryptededData: deepLinkData,
+          uniqueId: uniqueId,
         ),
         const VideoListScreen(),
       ];

@@ -12,7 +12,7 @@ import '../../widgets/marquee_widget.dart';
 import '../../widgets/placeholder_content.dart';
 import '../material_vide_controls_theme_data.dart';
 import '../../core/utils/shared/base_url_singlton.dart';
-
+import 'dart:math'; // Ensure this import is present at the top of the file
 class VideoPlayerScreen extends StatefulWidget {
   final String videoLink;
   final String lessonName;
@@ -24,7 +24,7 @@ class VideoPlayerScreen extends StatefulWidget {
   final String encryptededData;
   final String studentId;
   final String platformName;
-
+  final String uniqueId;
   const VideoPlayerScreen({
     super.key,
     required this.videoLink,
@@ -37,6 +37,7 @@ class VideoPlayerScreen extends StatefulWidget {
     required this.courseId,
     required this.studentId,
     required this.platformName,
+    required this.uniqueId,
   });
 
   @override
@@ -98,7 +99,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         setState(() => _isAuthorized = true);
         await _initializePlayer();
         _startProgressBar();
-        _setupTracking();
+
       } else {
         setState(() {
           _isAuthorized = false;
@@ -167,6 +168,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       bool hasStartedPlaying = false;
       player.stream.playing.listen((isPlaying) {
         if (isPlaying && !hasStartedPlaying) {
+          _setupTracking();
           hasStartedPlaying = true;
           // Now start checking the position
           player.stream.position.listen((position) {
@@ -186,7 +188,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void _setupTracking() {
     _progressTimer = Timer.periodic(
       const Duration(seconds: 1),
-      (timer) {
+          (timer) {
         if (player.state.playing) {
           _effectivePlayedTime += currentSpeed;
           if (_effectivePlayedTime ~/ 60 > _lastMinuteLogged) {
@@ -197,10 +199,27 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       },
     );
 
-    _apiUpdateTimer = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => _sendProgressToApi(),
-    );
+    // Schedule the first API update with a random delay
+    _scheduleRandomApiUpdate();
+  }
+
+  void _scheduleRandomApiUpdate() {
+    // List of possible minute intervals: 1, 2, 3, 4, 5, 6
+    final minuteOptions = [1, 2, 3, 4, 5, 6];
+    final random = Random();
+    final randomMinutes = minuteOptions[random.nextInt(minuteOptions.length)];
+    final duration = Duration(minutes: randomMinutes);
+
+    _apiUpdateTimer?.cancel();
+
+    _apiUpdateTimer = Timer(duration, () async {
+      await _sendProgressToApi();
+      if (mounted) {
+        _scheduleRandomApiUpdate();
+      }
+    });
+
+    debugPrint('Next API update scheduled in $randomMinutes minutes');
   }
 
   Future<void> _sendProgressToApi() async {
@@ -214,11 +233,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           'lesson_id': widget.lessonId,
           'time_second': "${(_lastMinuteLogged * 60).toInt()}",
           'duration_second': "${_videoTotalDuration.toInt()}",
+          'session_id': widget.uniqueId
         },
       );
 
       if (response != null && response.statusCode == 200) {
         _needsApiUpdate = false;
+        print("response: ${response.body}");
       }
     } catch (e) {
       debugPrint('Error sending progress to API: $e');
