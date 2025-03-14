@@ -17,7 +17,7 @@ import 'core/utils/shared/base_url_singlton.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  setupSingleton();
+  await setupSingleton();
 
   // Initialize sqflite_ffi for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {

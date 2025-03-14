@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ffi';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:media_kit/media_kit.dart';
@@ -12,6 +14,7 @@ import '../../widgets/marquee_widget.dart';
 import '../../widgets/placeholder_content.dart';
 import '../material_vide_controls_theme_data.dart';
 import '../../core/utils/shared/base_url_singlton.dart';
+import 'dart:math'; // Ensure this import is present at the top of the file
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoLink;
@@ -24,6 +27,8 @@ class VideoPlayerScreen extends StatefulWidget {
   final String encryptededData;
   final String studentId;
   final String platformName;
+  final String uniqueId;
+  final int requestDelay;
 
   const VideoPlayerScreen({
     super.key,
@@ -37,6 +42,8 @@ class VideoPlayerScreen extends StatefulWidget {
     required this.courseId,
     required this.studentId,
     required this.platformName,
+    required this.uniqueId,
+    required this.requestDelay,
   });
 
   @override
@@ -56,6 +63,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   bool isFullScreen = false;
   bool _isLoading = true;
   bool _isAuthorized = false;
+  bool _isUpdate = false;
   bool _isChangingTrack = false;
   double _effectivePlayedTime = 0.0;
   double _videoTotalDuration = 0.0;
@@ -87,21 +95,32 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Future<void> _authorizeAndInitialize() async {
     try {
+      final sharedState = getIt<SharedState>();
+      print('packageInfo version: ${sharedState.appVersion}');
+      print('packageInfo build: ${sharedState.buildNumber}');
+      print('courseId : ${widget.courseId}');
+      print('lessonId : ${widget.lessonId}');
+
       final response = await _apiService.auth(
         endpoint: 'dashboard/app/app-validation-data',
         authToken: widget.token,
         courseId: widget.courseId,
         lessonId: widget.lessonId,
+        app_version: sharedState.appVersion,
+        build_number: sharedState.buildNumber,
+
       );
 
       if (response != null && response.statusCode == 200) {
         setState(() => _isAuthorized = true);
         await _initializePlayer();
         _startProgressBar();
-        _setupTracking();
       } else {
+        print('Status Code Not 200: ${response?.body}');
+
         setState(() {
           _isAuthorized = false;
+          _isUpdate = true;
           _isLoading = false;
         });
       }
@@ -167,11 +186,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       bool hasStartedPlaying = false;
       player.stream.playing.listen((isPlaying) {
         if (isPlaying && !hasStartedPlaying) {
+          _setupTracking();
           hasStartedPlaying = true;
           // Now start checking the position
           player.stream.position.listen((position) {
             if (position.inSeconds >= 1) {
-              setState(() => _isLoading =
+              setState(() =>
+              _isLoading =
               false); // Stop loading after 1 second of playback
             }
           });
@@ -197,10 +218,29 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       },
     );
 
-    _apiUpdateTimer = Timer.periodic(
-      const Duration(minutes: 1),
-          (_) => _sendProgressToApi(),
-    );
+
+    // Schedule the first API update with a random delay
+    _scheduleRandomApiUpdate();
+  }
+
+  void _scheduleRandomApiUpdate() {
+    // int requestDelay = int.parse(widget.requestDelay);
+    // // List of possible minute intervals: 1, 2, 3, 4, 5, 6
+    // final minuteOptions = [requestDelay];
+    // final random = Random();
+    // final randomMinutes = minuteOptions[random.nextInt(minuteOptions.length)];
+    final duration = Duration(minutes: widget.requestDelay);
+
+    _apiUpdateTimer?.cancel();
+
+    _apiUpdateTimer = Timer(duration, () async {
+      await _sendProgressToApi();
+      if (mounted) {
+        _scheduleRandomApiUpdate();
+      }
+    });
+
+    debugPrint('Next API update scheduled in ${widget.requestDelay} minutes');
   }
 
   Future<void> _sendProgressToApi() async {
@@ -214,11 +254,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           'lesson_id': widget.lessonId,
           'time_second': "${(_lastMinuteLogged * 60).toInt()}",
           'duration_second': "${_videoTotalDuration.toInt()}",
+          'session_id': widget.uniqueId
         },
       );
 
       if (response != null && response.statusCode == 200) {
         _needsApiUpdate = false;
+        print("response: ${response.body}");
       }
     } catch (e) {
       debugPrint('Error sending progress to API: $e');
@@ -272,110 +314,112 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Material(
-          color: Colors.black.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Video Quality',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (validVideoTracks.isEmpty)
-                  const Text(
-                    'No quality options available',
-                    style: TextStyle(color: Colors.white),
-                  )
-                else
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: validVideoTracks.map((track) {
-                      final isSelected = track == selectedVideoTrack;
-                      return GestureDetector(
-                        onTap: () {
-                          _setVideoTrack(track);
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.turquoise
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.white),
-                          ),
-                          child: Text(
-                            _getQualityLabel(track),
-                            style: TextStyle(
-                              color: isSelected ? Colors.black : Colors.white,
+      builder: (context) =>
+          Dialog(
+            backgroundColor: Colors.transparent,
+            child: Material(
+              color: Colors.black.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Video Quality',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (validVideoTracks.isEmpty)
+                      const Text(
+                        'No quality options available',
+                        style: TextStyle(color: Colors.white),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: validVideoTracks.map((track) {
+                          final isSelected = track == selectedVideoTrack;
+                          return GestureDetector(
+                            onTap: () {
+                              _setVideoTrack(track);
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.turquoise
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.white),
+                              ),
+                              child: Text(
+                                _getQualityLabel(track),
+                                style: TextStyle(
+                                  color: isSelected ? Colors.black : Colors
+                                      .white,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Playback Speed',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [0.5, 1.0, 1.5, 2.0].map((speed) {
+                        final isSelected = speed == currentSpeed;
+                        return GestureDetector(
+                          onTap: () {
+                            _changePlaybackSpeed(speed);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.turquoise
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.white),
+                            ),
+                            child: Text(
+                              '${speed}x',
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white,
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Playback Speed',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [0.5, 1.0, 1.5, 2.0].map((speed) {
-                    final isSelected = speed == currentSpeed;
-                    return GestureDetector(
-                      onTap: () {
-                        _changePlaybackSpeed(speed);
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.turquoise
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white),
-                        ),
-                        child: Text(
-                          '${speed}x',
-                          style: TextStyle(
-                            color: isSelected ? Colors.black : Colors.white,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -409,7 +453,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             mainAxisSize: MainAxisSize.min, // Center the content vertically
             children: [
               Lottie.asset(
-                'assets/animation/dino.json', // Replace with your Lottie file path
+                'assets/animation/dino.json',
+                // Replace with your Lottie file path
                 width: 200, // Adjust size as needed
                 height: 200,
                 fit: BoxFit.contain,
@@ -433,15 +478,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 child: Container(
                   height: 12, // Adjust the height to make it taller
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8), // Adjust the radius for rounded corners
-                    color: Colors.grey[300], // Background color of the progress bar
+                    borderRadius: BorderRadius.circular(8),
+                    // Adjust the radius for rounded corners
+                    color: Colors
+                        .grey[300], // Background color of the progress bar
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8), // Ensure the progress bar has rounded corners too
+                    borderRadius: BorderRadius.circular(8),
+                    // Ensure the progress bar has rounded corners too
                     child: LinearProgressIndicator(
                       value: _progress,
-                      backgroundColor: Colors.transparent, // Set to transparent so the container color shows
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkBlue), // Color of the progress bar
+                      backgroundColor: Colors.transparent,
+                      // Set to transparent so the container color shows
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.darkBlue), // Color of the progress bar
                     ),
                   ),
                 ),
@@ -454,13 +504,35 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
     if (!_isAuthorized) {
-      return Scaffold(
-        appBar: SecondAppBar(text: 'Player'),
-        body: const PlaceholderContent(
-          message: 'انتهت مشاهدات الكورس الرجاء اعادة الإشتراك ^_* ...',
-          imagePath: 'assets/icon/unauthorized.png',
-        ),
-      );
+      if (_isUpdate) {
+        String message = '';
+        // Initialize sqflite_ffi for desktop platforms
+        if (Platform.isIOS) {
+          message = 'اعمل Update للبرنامج من App Store';
+        }
+        else if (Platform.isAndroid) {
+          message = 'اعمل Update للبرنامج من Google Play';
+        }
+        else if (Platform.isWindows) {
+          message = 'اعمل Update للبرنامج من المنصة';
+        }
+        return Scaffold(
+          appBar: SecondAppBar(text: 'Player'),
+          body: PlaceholderContent(
+            message: message,
+            imagePath: 'assets/icon/update.png',
+          ),
+        );
+      }
+      else {
+        return Scaffold(
+          appBar: SecondAppBar(text: 'Player'),
+          body: const PlaceholderContent(
+            message: 'انتهت مشاهدات الكورس الرجاء اعادة الإشتراك ^_* ...',
+            imagePath: 'assets/icon/unauthorized.png',
+          ),
+        );
+      }
     }
 
     return Directionality(
@@ -490,7 +562,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   MainAxisSize.min, // Center the content vertically
                   children: [
                     Lottie.asset(
-                      'assets/animation/dino.json', // Replace with your Lottie file path
+                      'assets/animation/dino.json',
+                      // Replace with your Lottie file path
                       width: 200, // Adjust size as needed
                       height: 200,
                       fit: BoxFit.contain,

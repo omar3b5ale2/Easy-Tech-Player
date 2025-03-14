@@ -46,6 +46,8 @@ class _HomeScreenState extends State<HomeScreen> {
         courseId: '',
         studentId: '',
         platformName: '',
+        uniqueId: '',
+        requestDelay: 1,
       ),
       VideoListScreen(),
     ];

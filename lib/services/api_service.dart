@@ -13,16 +13,21 @@ class ApiService {
     required String authToken,
     required String courseId,
     required String lessonId,
+    required String app_version,
+    required String build_number,
   }) async {
     final url = Uri.parse('$baseUrl/$endpoint');
     try {
       final body = {
         "course_id": courseId,
         "lesson_id": lessonId,
+        "app_version": app_version,
+        "build_number": build_number,
+
       };
-     if (kDebugMode) {
-       print("Sending data to API (auth): $body");
-     }
+      if (kDebugMode) {
+        print("Sending data to API (auth): $body");
+      }
 
       final response = await http.post(
         url,
@@ -116,9 +121,9 @@ class ApiService {
         return [];
       }
     } catch (error) {
-     if (kDebugMode) {
-       print('Exception (fetchCourses): $error');
-     }
+      if (kDebugMode) {
+        print('Exception (fetchCourses): $error');
+      }
       return [];
     }
   }
